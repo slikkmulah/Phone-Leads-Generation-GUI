@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phone-number-generator-desktop"
+version = "1.0.0"
+description = "An offline desktop phone number candidate generator"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = []
+
+[project.optional-dependencies]
+build = ["build>=1.2,<2", "pyinstaller>=6.16,<7"]
+
+[project.gui-scripts]
+phone-generator = "phone_generator.gui:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

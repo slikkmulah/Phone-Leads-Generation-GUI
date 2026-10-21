@@ -1,0 +1,16 @@
+# Original runtime and bytecode are preserved locally, excluded from sharing.
+/phone_gen/
+.venv*/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+/release/
+/.tmp/
+*.spec
+.coverage
+.DS_Store
+Thumbs.db
+/.local/
+/.tools/
