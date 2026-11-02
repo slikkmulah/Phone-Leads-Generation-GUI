@@ -46,7 +46,7 @@ class SettingsTests(unittest.TestCase):
             (root / "pyproject.toml").touch()
             with patch("phone_generator.settings.__file__", str(package / "settings.py")), \
                  patch("phone_generator.settings.sys.frozen", False, create=True):
-                self.assertEqual(results_root(), root)
+                self.assertEqual(results_root(), root.resolve())
 
     def test_installed_python_package_uses_user_data_directory(self):
         with tempfile.TemporaryDirectory() as directory:
