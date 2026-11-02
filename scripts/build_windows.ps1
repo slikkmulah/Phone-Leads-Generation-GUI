@@ -17,6 +17,8 @@ Invoke-Checked $buildPython @('-m', 'pip', 'install', '.[build]')
 Invoke-Checked $buildPython @('-m', 'unittest', 'discover', '-s', 'tests', '-v')
 Invoke-Checked $buildPython @('scripts/smoke_gui.py')
 Invoke-Checked $buildPython @('-m', 'PyInstaller', '--noconfirm', '--clean', '--windowed', '--onedir', '--name', 'PhoneNumberGenerator', '--paths', 'src', 'packaging\launcher.py')
+New-Item -ItemType Directory -Force dist\PhoneNumberGenerator\Results | Out-Null
+Copy-Item -LiteralPath Results\README.md -Destination dist\PhoneNumberGenerator\Results
 $diagnosticFolder = Join-Path (Get-Location) ('.tmp\frozen-check-' + [guid]::NewGuid().ToString('N'))
 $diagnosticProcess = Start-Process -FilePath (Join-Path (Get-Location) 'dist\PhoneNumberGenerator\PhoneNumberGenerator.exe') -ArgumentList '--self-test', ('"' + $diagnosticFolder + '"') -PassThru -Wait -WindowStyle Hidden
 if ($diagnosticProcess.ExitCode -ne 0) { throw "Frozen GUI diagnostics failed. See $diagnosticFolder" }

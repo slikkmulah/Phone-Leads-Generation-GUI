@@ -1,5 +1,12 @@
 # Local validation
 
+## Version 1.1.1 — 2026-11-02
+
+- 21 core/settings tests pass on Python 3.12.14, including Results directory creation, source/portable/Python-install locations, fallback when the app directory is not writable, and preservation of a saved destination.
+- Source GUI smoke checks and frozen executable diagnostics pass. The diagnostics verify that a fresh GUI defaults to an existing Results directory and passes the destination field to the Save dialog, alongside the existing generation, export, persistence, overwrite, and cancellation checks.
+- Windows installer and portable packages rebuilt as 1.1.1. Results contains only its explanatory README in distributed archives; generated lists are excluded from Git and source packages.
+- This version has not been rerun in the clean Windows VM. Native dialogs, installer wizard interaction, display scaling, and accessibility retain the limitations documented below.
+
 ## Version 1.1.0 — 2026-11-02
 
 - 16 core/settings tests pass on Python 3.12.14. Added tests for arbitrary starts, hyphen normalization, mixed prefix lengths, capacity limits, zero remaining digits, leading zeroes, and settings recovery/persistence.

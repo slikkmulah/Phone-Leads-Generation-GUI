@@ -18,6 +18,7 @@ from unittest.mock import patch
 from . import __version__
 from .core import FORMATS
 from .gui import App
+from .settings import default_results_folder
 
 
 def run_checks(destination: Path) -> int:
@@ -50,9 +51,11 @@ def run_checks(destination: Path) -> int:
         app.output_format.set(FORMATS[1] if mode == "prefix" else FORMATS[0])
 
     def save(path: Path, approve: bool = True, cancel: bool = False) -> None:
-        with patch("phone_generator.gui.filedialog.asksaveasfilename", return_value=str(path)), \
+        initial_folder = app.destination.get()
+        with patch("phone_generator.gui.filedialog.asksaveasfilename", return_value=str(path)) as dialog, \
              patch("phone_generator.gui.messagebox.askyesno", return_value=approve):
             app.save()
+            check(dialog.call_args.kwargs["initialdir"] == initial_folder, "Save dialog ignored the destination field")
             if cancel:
                 app.cancel()
         wait_for_export()
@@ -60,6 +63,9 @@ def run_checks(destination: Path) -> int:
     try:
         app = App(settings_path=destination / "settings.json")
         app.withdraw()
+        check(app.destination.get() == str(default_results_folder()), "Fresh GUI did not default to Results")
+        check(Path(app.destination.get()).is_dir(), "Default Results folder was not created")
+        report["checks"].append("Fresh GUI defaults to Results and passes its destination to the Save dialog")
         with patch("phone_generator.gui.messagebox.showerror", side_effect=lambda *a, **k: errors.append(a)):
             configure("206-234,425-234")
             app.preview()

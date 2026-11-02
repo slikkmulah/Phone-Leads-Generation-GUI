@@ -4,7 +4,7 @@ A free, offline desktop utility for creating phone number **candidates** for loo
 
 ## Get started on Windows
 
-Download a package from this repository's **Releases** section when its owner publishes a release:
+Download a package from the [latest release](https://github.com/slikkmulah/Phone-Leads-Generation-GUI/releases/latest):
 
 - **Setup:** run `PhoneNumberGenerator-Windows-Setup.exe`, then open Phone Number Generator from the Start menu. Installs for your user without administrator rights; uninstall through Windows Settings.
 - **Portable:** extract `PhoneNumberGenerator-Windows-Portable.zip` completely, open its folder, and double-click `PhoneNumberGenerator.exe`. Keep the `_internal` folder beside the executable.
@@ -29,8 +29,16 @@ Commas, spaces, semicolons, and new lines separate entries. Both `206-234` and `
 
 Every export contains unique numbers. Separate exports can overlap. Selection is random across all possible numbers in the ranges: a whole area code contributes more candidates than one exchange. Preview is a separate random sample, not the beginning of your saved list. Each export supports up to 1,000,000 numbers. The app remains responsive, shows progress, and allows cancellation. Existing files are replaced only after confirmation and successful completion; cancellation discards temporary output.
 
-The **Save folder** field remembers your destination between launches. Enter a
-folder or use **Browse**. Choosing another folder in the Save dialog updates it
+The **Save folder** starts at **Results** inside the repository when running from
+source, or beside the executable in the installed/portable Windows app. The
+folder is created automatically. Generated files are ignored by Git, so your
+lists stay on your computer. For a Python package installed with pip, or if the
+app folder is not writable, the default is
+`%LOCALAPPDATA%\PhoneNumberGenerator\Results` on Windows.
+
+The field remembers your destination between launches, and an existing saved
+choice takes priority over the default. Enter a folder or use **Browse**.
+Choosing another folder in the Save dialog updates it
 too. Preferences are stored locally per Windows user at
 `%LOCALAPPDATA%\PhoneNumberGenerator\settings.json`, so they survive app upgrades.
 If a saved folder is unavailable, choose an existing folder before exporting.
@@ -133,6 +141,7 @@ scripts/              Windows build and GUI smoke checks
 packaging/            Executable entry point and Inno Setup installer
 .github/workflows/    Compatibility tests and package builds
 docs/                 Release instructions and validation notes
+Results/              Default destination for generated lists (lists stay local)
 ```
 
 The original `phone_gen/` directory remains untouched locally and is excluded from Git and release packages. The supplied original was Python 3.9 bytecode (`gen.pyc`), with two batch launchers and a virtual environment; no original `.py` source was present. This is a readable-source replacement based on inspection of that bytecode. It improves on append-only output and permits multiple prefixes.

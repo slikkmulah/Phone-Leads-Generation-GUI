@@ -8,7 +8,7 @@ def main():
     destination = root / "release" / "PhoneNumberGenerator-Source.zip"
     destination.parent.mkdir(exist_ok=True)
     roots = [root / name for name in ("src/phone_generator", "tests", "scripts", "packaging", "docs", ".github")]
-    files = [root / name for name in ("README.md", "LICENSE", "CONTRIBUTING.md", "pyproject.toml", "MANIFEST.in", ".gitignore", "Start Phone Generator.bat")]
+    files = [root / name for name in ("README.md", "LICENSE", "CONTRIBUTING.md", "pyproject.toml", "MANIFEST.in", ".gitignore", "Start Phone Generator.bat", "Results/README.md")]
     for folder in roots:
         files.extend(p for p in folder.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix not in (".pyc", ".pyo"))
     with ZipFile(destination, "w", ZIP_DEFLATED) as archive:

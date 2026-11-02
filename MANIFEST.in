@@ -1,6 +1,7 @@
 include LICENSE README.md CONTRIBUTING.md
 include *.bat
 include .gitignore MANIFEST.in
+include Results/README.md
 recursive-include docs *.md *.txt
 recursive-include scripts *.py *.ps1
 recursive-include packaging *.py *.iss

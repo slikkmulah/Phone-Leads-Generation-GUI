@@ -1,4 +1,4 @@
-#define AppVersion "1.1.0"
+#define AppVersion "1.1.1"
 [Setup]
 AppId={{C7AA0516-5F34-4D0B-877F-5A1DA2D46D36}
 AppName=Phone Number Generator
@@ -18,6 +18,9 @@ ArchitecturesInstallIn64BitMode=x64compatible
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
+
+[Dirs]
+Name: "{app}\Results"; Flags: uninsneveruninstall
 
 [Files]
 Source: "..\dist\PhoneNumberGenerator\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
