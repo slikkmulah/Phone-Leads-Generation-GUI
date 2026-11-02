@@ -8,7 +8,8 @@ from phone_generator.gui import App
 
 
 def main():
-    app = App()
+    settings = tempfile.TemporaryDirectory()
+    app = App(settings_path=Path(settings.name) / "settings.json")
     app.withdraw()
     errors = []
     try:
@@ -35,6 +36,7 @@ def main():
         print("Tk smoke passed: preview, both modes, background exports, completion state.")
     finally:
         app.destroy()
+        settings.cleanup()
 
 
 if __name__ == "__main__":

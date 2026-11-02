@@ -47,7 +47,7 @@ def run_checks(destination: Path) -> int:
         app.entries.delete("1.0", "end")
         app.entries.insert("1.0", entries)
         app.count.set(str(count))
-        app.output_format.set(FORMATS[0])
+        app.output_format.set(FORMATS[1] if mode == "prefix" else FORMATS[0])
 
     def save(path: Path, approve: bool = True, cancel: bool = False) -> None:
         with patch("phone_generator.gui.filedialog.asksaveasfilename", return_value=str(path)), \
@@ -58,7 +58,7 @@ def run_checks(destination: Path) -> int:
         wait_for_export()
 
     try:
-        app = App()
+        app = App(settings_path=destination / "settings.json")
         app.withdraw()
         with patch("phone_generator.gui.messagebox.showerror", side_effect=lambda *a, **k: errors.append(a)):
             configure("206-234,425-234")
@@ -95,6 +95,37 @@ def run_checks(destination: Path) -> int:
             check(len(rows) == 1000 and len(set(rows)) == 1000, "Custom export count/uniqueness failed")
             check(all(n.startswith(("+447700", "+447701")) and len(n) == 13 for n in rows), "Wrong custom ranges")
             report["checks"].append("Custom international GUI export")
+
+            for entry in ("12067745", "20677456", "206-332-7", "2063327"):
+                configure(entry, "prefix", count=50)
+                app.prefix_remaining.set("3")
+                app.preview()
+                for suffix in ("txt", "csv"):
+                    target = destination / f"prefix-{entry}.{suffix}"
+                    save(target)
+                    if suffix == "csv":
+                        with target.open(newline="") as handle:
+                            rows = [r["phone_number"] for r in csv.DictReader(handle)]
+                    else:
+                        rows = target.read_text().splitlines()
+                    prefix = entry.replace("-", "")
+                    check(len(rows) == 50 and len(set(rows)) == 50, "Starting-digits count/uniqueness failed")
+                    check(all(n.startswith(prefix) and len(n) == len(prefix) + 3 for n in rows), "Starting digits changed")
+            report["checks"].append("Any starting digits: all four requested examples, 50 unique TXT/CSV rows each")
+            check(app.destination.get() == str(destination), "Selected output folder was not remembered")
+            app.destroy()
+            app = App(settings_path=destination / "settings.json")
+            app.withdraw()
+            check(app.destination.get() == str(destination), "Save folder did not survive reopening the GUI")
+            report["checks"].append("Save folder restored after closing and reopening the GUI")
+            typed_folder = destination / "Typed folder with spaces"
+            typed_folder.mkdir()
+            app.destination.set(str(typed_folder))
+            app.close()
+            app = App(settings_path=destination / "settings.json")
+            app.withdraw()
+            check(app.destination.get() == str(typed_folder), "Typed destination did not survive closing the GUI")
+            report["checks"].append("Manually entered save folder remembered on close")
 
             existing = destination / "existing.txt"
             existing.write_text("preserve this content", encoding="utf-8")

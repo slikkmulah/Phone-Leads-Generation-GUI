@@ -1,4 +1,4 @@
-#define AppVersion "1.0.0"
+#define AppVersion "1.1.0"
 [Setup]
 AppId={{C7AA0516-5F34-4D0B-877F-5A1DA2D46D36}
 AppName=Phone Number Generator

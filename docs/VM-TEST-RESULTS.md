@@ -1,6 +1,6 @@
 # Windows VM package test results
 
-Completed 2026-10-21 against Windows 11 Enterprise Evaluation, build 26300, x64. The VM used 4 virtual CPUs, 4–8 GB RAM, Secure Boot, and a virtual TPM. No external Python installation was present. A clean checkpoint was retained before testing.
+Completed for version **1.0.0** on 2026-10-21 against Windows 11 Enterprise Evaluation, build 26300, x64. These results do not cover later builds. The VM used 4 virtual CPUs, 4–8 GB RAM, Secure Boot, and a virtual TPM. No external Python installation was present. A clean checkpoint was retained before testing.
 
 ## Passed
 

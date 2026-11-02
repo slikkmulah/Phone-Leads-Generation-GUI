@@ -29,6 +29,33 @@ Commas, spaces, semicolons, and new lines separate entries. Both `206-234` and `
 
 Every export contains unique numbers. Separate exports can overlap. Selection is random across all possible numbers in the ranges: a whole area code contributes more candidates than one exchange. Preview is a separate random sample, not the beginning of your saved list. Each export supports up to 1,000,000 numbers. The app remains responsive, shows progress, and allows cancellation. Existing files are replaced only after confirmation and successful completion; cancellation discards temporary output.
 
+The **Save folder** field remembers your destination between launches. Enter a
+folder or use **Browse**. Choosing another folder in the Save dialog updates it
+too. Preferences are stored locally per Windows user at
+`%LOCALAPPDATA%\PhoneNumberGenerator\settings.json`, so they survive app upgrades.
+If a saved folder is unavailable, choose an existing folder before exporting.
+
+## Any starting digits
+
+Select **Any starting digits**, paste the exact starts you want, and answer
+**How many digits remain?** The app appends that many random digits without
+adding or removing a country code. Hyphens inside an entry are ignored.
+
+| Starting digits | Digits remaining | Quantity | Result |
+| --- | --- | --- | --- |
+| `12067745` | `3` | `50` | 50 unique numbers matching `12067745XXX` |
+| `20677456` | `2` | `50` | 50 unique numbers matching `20677456XX` |
+| `206-332-7` or `2063327` | `3` | `50` | 50 unique numbers matching `2063327XXX` |
+
+Multiple starts may have different lengths and can be separated by commas,
+spaces, semicolons, or new lines. Duplicate starts are removed after stripping
+hyphens. Leading zeroes are preserved. Output is digits only, exactly as entered
+plus the requested suffix. Choose 0 remaining digits to export the unique starts
+themselves. Up to 1,000 remaining digits are supported; this mode creates literal
+digit combinations and does not enforce phone-number length or allocation rules.
+One start with 2 remaining digits offers only 100 unique combinations, so a request
+for more than 100 is rejected rather than repeating numbers.
+
 ## Custom international mode
 
 Choose **Custom international**, supply the country calling code (for example `44`), enter same-length prefixes without country code or domestic trunk zero (for example `7700, 7701`), and set the number of random remaining digits (for example `6`). This produces `+447700XXXXXX` or `+447701XXXXXX`. Choose international or digits-only output. This mode checks input shape and the 15-digit maximum, not country-specific allocation rules.

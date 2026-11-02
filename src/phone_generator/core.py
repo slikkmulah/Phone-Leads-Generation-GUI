@@ -36,6 +36,8 @@ class Block:
         if self.area_only:
             nxx, suffix = divmod(index, 10_000)
             return self.prefix + NXX_CODES[nxx] + f"{suffix:04d}"
+        if self.remaining == 0:
+            return self.prefix
         return self.prefix + str(index).zfill(self.remaining)
 
 
@@ -85,6 +87,23 @@ def nanp_space(text: str) -> NumberSpace:
     areas = {entry for entry in normalized if len(entry) == 3}
     prefixes = sorted(entry for entry in normalized if len(entry) == 3 or entry[:3] not in areas)
     return NumberSpace(tuple(Block("1" + p, 7 if len(p) == 3 else 4, len(p) == 3) for p in prefixes))
+
+
+def prefix_space(text: str, remaining: int) -> NumberSpace:
+    """Append digits literally, without adding or inferring a country code."""
+    if not 0 <= remaining <= 1000:
+        raise ValueError("Remaining digits must be between 0 and 1000.")
+    entries = split_entries(text)
+    if not entries:
+        raise ValueError("Enter at least one number start, such as 12067745 or 206-332-7.")
+    prefixes: set[str] = set()
+    for entry in entries:
+        if not re.fullmatch(r"[0-9]+(?:-[0-9]+)*", entry):
+            raise ValueError(f"'{entry}': use digits, optionally separated by hyphens, such as 206-332-7.")
+        prefixes.add(entry.replace("-", ""))
+    # Equal-length duplicates collapse; different-length starts yield different
+    # output lengths and therefore cannot overlap when remaining is fixed.
+    return NumberSpace(tuple(Block(p, remaining) for p in sorted(prefixes)), nanp=False)
 
 
 def custom_space(country: str, text: str, remaining: int) -> NumberSpace:

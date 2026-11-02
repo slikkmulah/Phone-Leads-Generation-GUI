@@ -5,10 +5,36 @@ import unittest
 from pathlib import Path
 from threading import Event
 
-from phone_generator.core import Cancelled, FORMATS, custom_space, export_numbers, format_number, nanp_space
+from phone_generator.core import Cancelled, FORMATS, custom_space, export_numbers, format_number, nanp_space, prefix_space
 
 
 class GenerationTests(unittest.TestCase):
+    def test_arbitrary_start_examples(self):
+        for prefix in ("12067745", "20677456", "2063327", "0", "12345678901234567890"):
+            with self.subTest(prefix=prefix):
+                numbers = list(prefix_space(prefix, 3).sample(50))
+                self.assertEqual(len(set(numbers)), 50)
+                self.assertTrue(all(n.startswith(prefix) and len(n) == len(prefix) + 3 for n in numbers))
+
+    def test_hyphenated_starts_deduplicate_and_allow_different_lengths(self):
+        space = prefix_space("206-332-7,2063327;12067745\n20677456", 2)
+        self.assertEqual(space.capacity, 300)
+        numbers = list(space.sample(300))
+        self.assertEqual(len(set(numbers)), 300)
+        self.assertIn("206332700", numbers)
+        self.assertIn("1206774500", numbers)
+        with self.assertRaises(ValueError):
+            list(space.sample(301))
+
+    def test_prefix_zero_remaining_and_validation(self):
+        self.assertEqual(set(prefix_space("206-332-7 2063327 12067745", 0).sample(2)), {"2063327", "12067745"})
+        for entry in ("", "abc", "206--332", "-206", "206-", "+1206", "２０６"):
+            with self.subTest(entry=entry), self.assertRaises(ValueError):
+                prefix_space(entry, 3)
+        for remaining in (-1, 1001):
+            with self.assertRaises(ValueError):
+                prefix_space("206", remaining)
+
     def test_mixed_entries_normalize_and_remove_overlap(self):
         space = nanp_space("206, 206-234; 425-234\n425234 206")
         self.assertEqual([b.prefix for b in space.blocks], ["1206", "1425234"])

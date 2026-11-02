@@ -1,4 +1,13 @@
-# Local validation — 2026-10-21
+# Local validation
+
+## Version 1.1.0 — 2026-11-02
+
+- 16 core/settings tests pass on Python 3.12.14. Added tests for arbitrary starts, hyphen normalization, mixed prefix lengths, capacity limits, zero remaining digits, leading zeroes, and settings recovery/persistence.
+- Source and frozen GUI diagnostics test all four requested starts (`12067745`, `20677456`, `206-332-7`, `2063327`), generating 50 distinct TXT/CSV rows for each with 3 appended digits.
+- GUI checks verify restoration of both a Save-dialog-selected folder and a manually entered folder after closing/reopening. Tests use isolated configuration files rather than changing real user preferences.
+- Windows installer and portable packages rebuilt as 1.1.0. Native dialog interaction, visual layout, and a fresh-VM rerun of this version have not been verified; the VM results below refer to the earlier 1.0.0 packages.
+
+## Version 1.0.0 — 2026-10-21
 
 ## Completed
 

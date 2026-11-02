@@ -10,11 +10,12 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from . import __version__
-from .core import Cancelled, FORMATS, MAX_COUNT, custom_space, export_numbers, format_number, nanp_space
+from .settings import default_settings_path, load_folder, save_folder
+from .core import Cancelled, FORMATS, MAX_COUNT, custom_space, export_numbers, format_number, nanp_space, prefix_space
 
 
 class App(tk.Tk):
-    def __init__(self) -> None:
+    def __init__(self, settings_path: Path | None = None) -> None:
         super().__init__()
         self.title("Phone Number Generator")
         width = min(840, self.winfo_screenwidth() - 60)
@@ -26,9 +27,12 @@ class App(tk.Tk):
         self.cancel_event = threading.Event()
         self.busy = False
         self.last_file: Path | None = None
+        self.settings_path = settings_path if settings_path is not None else default_settings_path()
+        self.destination = tk.StringVar(value=load_folder(self.settings_path))
         self.mode = tk.StringVar(value="nanp")
         self.country = tk.StringVar(value="44")
         self.remaining = tk.StringVar(value="6")
+        self.prefix_remaining = tk.StringVar(value="3")
         self.count = tk.StringVar(value="1000")
         self.output_format = tk.StringVar(value=FORMATS[0])
         self.status = tk.StringVar(value="Ready. Add your area codes to get started.")
@@ -46,7 +50,7 @@ class App(tk.Tk):
         style.configure("TEntry", padding=6)
         self._build()
         self.protocol("WM_DELETE_WINDOW", self.close)
-        self.after(100, self.poll)
+        self._poll_after = self.after(100, self.poll)
 
     def _build(self) -> None:
         # A scrollable form keeps Save and status reachable on small/high-DPI screens.
@@ -86,19 +90,24 @@ class App(tk.Tk):
         modes.grid(row=3, column=0, sticky="w", pady=10)
         ttk.Radiobutton(modes, text="North America (+1)", variable=self.mode, value="nanp", command=self.change_mode).pack(side="left", padx=(0, 24))
         ttk.Radiobutton(modes, text="Custom international", variable=self.mode, value="custom", command=self.change_mode).pack(side="left")
-        self.hint = ttk.Label(body, text="Area codes, NPA-NXX pairs, or both. Separate with commas, spaces, or new lines.")
+        ttk.Radiobutton(modes, text="Any starting digits", variable=self.mode, value="prefix", command=self.change_mode).pack(side="left", padx=(24, 0))
+        self.hint = ttk.Label(body, text="Area codes, NPA-NXX pairs, or both. Separate with commas, spaces, or new lines.", wraplength=710)
         self.hint.grid(row=4, column=0, sticky="w")
         self.entries = tk.Text(body, height=4, wrap="word", font=("Consolas", 12), relief="solid", bd=1, padx=12, pady=10, undo=True)
         self.entries.grid(row=5, column=0, sticky="ew", pady=(8, 4))
         self.entries.bind("<Tab>", lambda e: (e.widget.tk_focusNext().focus_set(), "break")[-1])
         self.entries.bind("<Shift-Tab>", lambda e: (e.widget.tk_focusPrev().focus_set(), "break")[-1])
-        self.example = ttk.Label(body, text="Example: 206, 425, 503-234, 503-235")
+        self.example = ttk.Label(body, text="Example: 206, 425, 503-234, 503-235", wraplength=710)
         self.example.grid(row=6, column=0, sticky="w")
         self.custom_row = ttk.Frame(body)
         ttk.Label(self.custom_row, text="Country calling code").pack(side="left")
         ttk.Entry(self.custom_row, textvariable=self.country, width=6).pack(side="left", padx=(8, 24))
         ttk.Label(self.custom_row, text="Random digits after each prefix").pack(side="left")
         ttk.Entry(self.custom_row, textvariable=self.remaining, width=6).pack(side="left", padx=8)
+        self.prefix_row = ttk.Frame(body)
+        ttk.Label(self.prefix_row, text="How many digits remain?").pack(side="left")
+        ttk.Entry(self.prefix_row, textvariable=self.prefix_remaining, width=6).pack(side="left", padx=8)
+        ttk.Label(self.prefix_row, text="Random digits to add after each start").pack(side="left", padx=8)
         ttk.Label(body, text="2   Set your quantity and format", style="Step.TLabel").grid(row=8, column=0, sticky="w", pady=(20, 8))
         settings = ttk.Frame(body)
         settings.grid(row=9, column=0, sticky="ew")
@@ -116,8 +125,17 @@ class App(tk.Tk):
         self.sample_box = tk.Text(body, height=3, font=("Consolas", 11), bg="#e7edf7", fg="#24334b", relief="flat", padx=12, pady=8, state="disabled")
         self.sample_box.grid(row=12, column=0, sticky="ew", pady=(8, 14))
         ttk.Label(body, text="3   Save your list", style="Step.TLabel").grid(row=13, column=0, sticky="w")
+        destination_row = ttk.Frame(body)
+        destination_row.grid(row=14, column=0, sticky="ew", pady=(8, 0))
+        destination_row.columnconfigure(1, weight=1)
+        ttk.Label(destination_row, text="Save folder").grid(row=0, column=0, padx=(0, 8))
+        destination_entry = ttk.Entry(destination_row, textvariable=self.destination)
+        destination_entry.grid(row=0, column=1, sticky="ew")
+        destination_entry.bind("<FocusOut>", lambda _: self.remember_destination())
+        destination_entry.bind("<Return>", lambda _: self.remember_destination())
+        ttk.Button(destination_row, text="Browse…", command=self.browse_destination).grid(row=0, column=2, padx=(8, 0))
         actions = ttk.Frame(body)
-        actions.grid(row=14, column=0, sticky="ew", pady=10)
+        actions.grid(row=15, column=0, sticky="ew", pady=10)
         self.save_button = ttk.Button(actions, text="Generate & save…", style="Primary.TButton", command=self.save)
         self.save_button.pack(side="left")
         self.cancel_button = ttk.Button(actions, text="Cancel", command=self.cancel, state="disabled")
@@ -125,12 +143,29 @@ class App(tk.Tk):
         self.open_button = ttk.Button(actions, text="Open output folder", command=self.open_folder, state="disabled")
         self.open_button.pack(side="right")
         self.progress = ttk.Progressbar(body, mode="determinate")
-        self.progress.grid(row=15, column=0, sticky="ew")
-        ttk.Label(body, textvariable=self.status, wraplength=740).grid(row=16, column=0, sticky="w", pady=8)
-        ttk.Label(body, text="Offline candidate generation only. Numbers may be unassigned or inactive.\nNo carrier or HLR lookup is performed. Duplicates are prevented within each export.", wraplength=740).grid(row=17, column=0, sticky="w", pady=(8, 0))
-        ttk.Label(body, text=f"Version {__version__}  •  No account needed", font=("Segoe UI", 9)).grid(row=18, column=0, sticky="w", pady=(8, 0))
+        self.progress.grid(row=16, column=0, sticky="ew")
+        ttk.Label(body, textvariable=self.status, wraplength=740).grid(row=17, column=0, sticky="w", pady=8)
+        ttk.Label(body, text="Offline candidate generation only. Numbers may be unassigned or inactive.\nNo carrier or HLR lookup is performed. Duplicates are prevented within each export.", wraplength=740).grid(row=18, column=0, sticky="w", pady=(8, 0))
+        ttk.Label(body, text=f"Version {__version__}  •  No account needed", font=("Segoe UI", 9)).grid(row=19, column=0, sticky="w", pady=(8, 0))
+
+    def remember_destination(self) -> None:
+        folder = self.destination.get().strip()
+        if folder:
+            try:
+                save_folder(self.settings_path, folder)
+            except OSError:
+                self.status.set("Could not remember the save folder. Check your user settings folder permissions.")
+
+    def browse_destination(self) -> None:
+        current = Path(self.destination.get()).expanduser()
+        folder = filedialog.askdirectory(parent=self, title="Choose save folder", initialdir=str(current if current.is_dir() else Path.home()))
+        if folder:
+            self.destination.set(folder)
+            self.remember_destination()
 
     def change_mode(self) -> None:
+        self.custom_row.grid_remove()
+        self.prefix_row.grid_remove()
         if self.mode.get() == "custom":
             self.custom_row.grid(row=7, column=0, sticky="w", pady=(8, 0))
             self.hint.configure(text="Enter prefixes without the country code or domestic trunk zero.")
@@ -138,6 +173,12 @@ class App(tk.Tk):
             self.format_box.configure(values=FORMATS[:2])
             if self.output_format.get() not in FORMATS[:2]:
                 self.output_format.set(FORMATS[0])
+        elif self.mode.get() == "prefix":
+            self.prefix_row.grid(row=7, column=0, sticky="w", pady=(8, 0))
+            self.hint.configure(text="Enter any starting digits. Hyphens are optional; separate starts with commas or new lines.")
+            self.example.configure(text="Example: 12067745 with 3 remaining digits makes 12067745XXX. No country code is added.")
+            self.format_box.configure(values=(FORMATS[1],))
+            self.output_format.set(FORMATS[1])
         else:
             self.custom_row.grid_remove()
             self.hint.configure(text="Area codes, NPA-NXX pairs, or both. Separate with commas, spaces, or new lines.")
@@ -152,10 +193,10 @@ class App(tk.Tk):
             space = nanp_space(text)
         else:
             try:
-                remaining = int(self.remaining.get())
+                remaining = int(self.prefix_remaining.get() if self.mode.get() == "prefix" else self.remaining.get())
             except ValueError:
                 raise ValueError("Remaining digits must be a whole number.") from None
-            space = custom_space(self.country.get(), text, remaining)
+            space = prefix_space(text, remaining) if self.mode.get() == "prefix" else custom_space(self.country.get(), text, remaining)
         try:
             count = int(self.count.get().replace(",", ""))
         except ValueError:
@@ -188,10 +229,17 @@ class App(tk.Tk):
         except ValueError as error:
             messagebox.showerror("Check your entries", str(error), parent=self)
             return
-        filename = filedialog.asksaveasfilename(parent=self, title="Save your phone number list", initialfile="phone_numbers.txt", defaultextension=".txt", filetypes=[("Text file (one number per line)", "*.txt"), ("CSV file (phone_number column)", "*.csv")], confirmoverwrite=False)
+        folder = Path(self.destination.get().strip()).expanduser()
+        if not self.destination.get().strip() or not folder.is_dir():
+            messagebox.showerror("Check save folder", "Choose an existing save folder using Browse, or enter a valid folder path.", parent=self)
+            return
+        self.remember_destination()
+        filename = filedialog.asksaveasfilename(parent=self, title="Save your phone number list", initialdir=str(folder), initialfile="phone_numbers.txt", defaultextension=".txt", filetypes=[("Text file (one number per line)", "*.txt"), ("CSV file (phone_number column)", "*.csv")], confirmoverwrite=False)
         if not filename:
             return
         path = Path(filename)
+        self.destination.set(str(path.parent))
+        self.remember_destination()
         overwrite = path.exists()
         if overwrite and not messagebox.askyesno("Replace existing file?", f"Replace {path.name}?\nIts current contents will be replaced only after generation succeeds.", parent=self):
             return
@@ -245,7 +293,13 @@ class App(tk.Tk):
                     self.open_button.configure(state="normal")
         except queue.Empty:
             pass
-        self.after(100, self.poll)
+        self._poll_after = self.after(100, self.poll)
+
+    def destroy(self) -> None:
+        if getattr(self, "_poll_after", None) is not None:
+            self.after_cancel(self._poll_after)
+            self._poll_after = None
+        super().destroy()
 
     def open_folder(self) -> None:
         if self.last_file:
@@ -262,6 +316,7 @@ class App(tk.Tk):
         if self.busy:
             messagebox.showinfo("Export in progress", "Cancel the export or let it finish before closing.", parent=self)
         else:
+            self.remember_destination()
             self.destroy()
 
 
