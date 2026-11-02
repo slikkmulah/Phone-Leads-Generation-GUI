@@ -62,11 +62,11 @@ Choose **Custom international**, supply the country calling code (for example `4
 
 ## What generation means
 
-This app creates combinations; it does **not** confirm assignment, activity, carrier, mobile status, reachability, or consent, and it does not perform an HLR lookup or contact any generated number. There is no bundled allocation database that can go stale. North American mode checks the basic NPA/NXX structure and excludes N11 service codes; other reserved or unassigned ranges can still appear. Use explicit NPA-NXX inputs from a current data source when you need a narrower candidate set.
+This app creates combinations; it does **not** confirm assignment, activity, carrier, mobile status, reachability, or consent, and it does not perform any sort of phone number validation or contact any generated number. There is no bundled allocation database that can go stale. North American mode checks the basic NPA/NXX structure and excludes N11 service codes; other reserved or unassigned ranges can still appear. Use explicit NPA-NXX inputs from a current data source when you need a narrower candidate set.
 
-NANPA documents the [NPA-NXX structure](https://www.nanpa.com/numbering/co-codesthousands-blocks) and publishes [CO code assignment records](https://www.nanpa.com/reports/co-code-reports/cocodes_assign). Assignment records and a generated candidate are not proof that an individual number is active. No HLR service integration is included in this release.
+NANPA documents the [NPA-NXX structure](https://www.nanpa.com/numbering/co-codesthousands-blocks) and publishes [CO code assignment records](https://www.nanpa.com/reports/co-code-reports/cocodes_assign). Assignment records and a generated candidate are not proof that an individual number is active.
 
-CSV contains literal phone strings. Spreadsheet programs may interpret a leading `+` or long digits as numeric values. For HLR uploads use the file directly; when opening in Excel, import the column as **Text** to preserve it.
+CSV contains literal phone strings. Spreadsheet programs may interpret a leading `+` or long digits as numeric values. When opening in Excel, import the column as **Text** to preserve it.
 
 ## Run from source
 
