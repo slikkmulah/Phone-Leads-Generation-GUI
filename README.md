@@ -157,3 +157,7 @@ See [the validation record](docs/VALIDATION.md) for completed tests and remainin
 ## License
 
 [MIT](LICENSE). Free to use, modify, and redistribute, including with a commercial service.
+
+## Disclaimer
+
+This software is provided "as is," without warranty, under the MIT License. Users are responsible for complying with applicable laws. The authors do not endorse illegal or abusive use.
